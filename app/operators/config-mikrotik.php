@@ -295,7 +295,7 @@
                                     radius_auth_port, radius_acct_port, pppoe_pool_network, pppoe_pool_cidr,
                                     isolir_profile, redirect_url, is_active,
                                     creationdate, creationby, updatedate, updateby)
-                                    VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d,
+                                    VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d,
                                     '%s', '%s', '%s', '%s')",
                                     $configValues['CONFIG_DB_TBL_DALOMIKROTIKNAS'],
                                     $dbSocket->escapeSimple($name), $dbSocket->escapeSimple($nasname),
