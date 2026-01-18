@@ -114,10 +114,16 @@
 
 
     // print HTML prologue
+    $extra_css = array();
+
+    $extra_js = array(
+        "static/js/productive_funcs.js",
+    );
+
     $title = t('Intro','mngradnasnew.php');
     $help = t('helpPage','mngradnasnew');
     
-    print_html_prologue($title, $langCode);
+    print_html_prologue($title, $langCode, $extra_css, $extra_js);
 
     print_title_and_help($title, $help);
     
@@ -139,7 +145,8 @@
                                         "name" => "nassecret",
                                         "caption" => t('all','NasSecret'),
                                         "type" => "text",
-                                        "value" => ((isset($nassecret)) ? $nassecret : "")
+                                        "value" => ((isset($nassecret)) ? $nassecret : ""),
+                                        "random" => true
                                      );
                                      
         $input_descriptors0[] = array(

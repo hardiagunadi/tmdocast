@@ -140,10 +140,16 @@
     include('../common/includes/db_close.php');
     
     // print HTML prologue
+    $extra_css = array();
+
+    $extra_js = array(
+        "static/js/productive_funcs.js",
+    );
+
     $title = t('Intro','mngradnasedit.php');
     $help = t('helpPage','mngradnasedit');
     
-    print_html_prologue($title, $langCode);
+    print_html_prologue($title, $langCode, $extra_css, $extra_js);
 
     if (isset($nasname_enc)) {
         $title .= " :: $nasname_enc";
@@ -178,7 +184,8 @@
                                         "name" => "secret",
                                         "caption" => t('all','NasSecret'),
                                         "type" => "text",
-                                        "value" => ((isset($secret)) ? $secret : "")
+                                        "value" => ((isset($secret)) ? $secret : ""),
+                                        "random" => true
                                      );
                                      
         $input_descriptors0[] = array(

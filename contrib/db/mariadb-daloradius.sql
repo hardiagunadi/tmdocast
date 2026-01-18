@@ -10457,6 +10457,13 @@ INSERT INTO `operators_acl` (`id`, `operator_id`, `file`, `access`) VALUES
 (137, 1, 'config_crontab', 1),
 (138, 1, 'config_mail_settings', 1),
 (139, 1, 'config_mail_testing', 1),
+(155, 1, 'pppoe_new', 1),
+(156, 1, 'pppoe_list', 1),
+(157, 1, 'hotspot_new', 1),
+(158, 1, 'hotspot_list', 1),
+(159, 1, 'config_mikrotik', 1),
+(160, 1, 'config_wa_gateway', 1),
+(161, 1, 'bill_invoice_pay', 1),
 (140, 1, 'ator_username', 0),
 (141, 1, 'ator_password', 0),
 (142, 1, 'tname', 0),
@@ -10506,6 +10513,10 @@ INSERT INTO `operators_acl_files` (`file`, `category`, `section`) VALUES
 ('mng_new_quick', 'Management', 'Users'),
 ('mng_import_users', 'Management', 'Users'),
 ('mng_list_all', 'Management', 'Users'),
+('pppoe_new', 'Management', 'PPPoE'),
+('pppoe_list', 'Management', 'PPPoE'),
+('hotspot_new', 'Management', 'Hotspot'),
+('hotspot_list', 'Management', 'Hotspot'),
 ('mng_hs_del', 'Management', 'Hotspot'),
 ('mng_hs_edit', 'Management', 'Hotspot'),
 ('mng_hs_new', 'Management', 'Hotspot'),
@@ -10622,6 +10633,7 @@ INSERT INTO `operators_acl_files` (`file`, `category`, `section`) VALUES
 ('bill_invoice_new', 'Billing', 'Invoice'),
 ('bill_invoice_edit', 'Billing', 'Invoice'),
 ('bill_invoice_del', 'Billing', 'Invoice'),
+('bill_invoice_pay', 'Billing', 'Invoice'),
 ('bill_payment_types_new', 'Billing', 'Payment Types'),
 ('bill_payment_types_edit', 'Billing', 'Payment Types'),
 ('bill_payment_types_list', 'Billing', 'Payment Types'),
@@ -10633,6 +10645,8 @@ INSERT INTO `operators_acl_files` (`file`, `category`, `section`) VALUES
 ('rep_newusers', 'Reporting', 'Core'),
 ('bill_invoice_report', 'Billing', 'Invoice'),
 ('config_reports_dashboard', 'Configuration', 'Reporting'),
+('config_mikrotik', 'Configuration', 'NAS'),
+('config_wa_gateway', 'Configuration', 'Integrations'),
 ('rep_stat_ups', 'Reporting', 'Status'),
 ('rep_stat_raid', 'Reporting', 'Status'),
 ('rep_stat_cron', 'Reporting', 'Status');
@@ -10872,6 +10886,149 @@ LOCK TABLES `userinfo` WRITE;
 /*!40000 ALTER TABLE `userinfo` DISABLE KEYS */;
 /*!40000 ALTER TABLE `userinfo` ENABLE KEYS */;
 UNLOCK TABLES;
+--
+-- Table structure for table `mikrotik_nas`
+--
+
+DROP TABLE IF EXISTS `mikrotik_nas`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8mb4;
+CREATE TABLE `mikrotik_nas` (
+  `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(128) NOT NULL,
+  `nasname` VARCHAR(128) DEFAULT NULL,
+  `host` VARCHAR(255) NOT NULL,
+  `port` INT(11) NOT NULL DEFAULT '8728',
+  `api_username` VARCHAR(128) NOT NULL,
+  `api_password` VARCHAR(128) NOT NULL,
+  `radius_server` VARCHAR(255) DEFAULT NULL,
+  `radius_auth_port` INT(11) NOT NULL DEFAULT '1812',
+  `radius_acct_port` INT(11) NOT NULL DEFAULT '1813',
+  `pppoe_pool_network` VARCHAR(32) NOT NULL DEFAULT '172.16.0.0',
+  `pppoe_pool_cidr` INT(11) NOT NULL DEFAULT '20',
+  `isolir_profile` VARCHAR(128) NOT NULL DEFAULT 'isolir',
+  `redirect_url` VARCHAR(255) DEFAULT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT '1',
+  `creationdate` DATETIME DEFAULT '0000-00-00 00:00:00',
+  `creationby` VARCHAR(128) DEFAULT NULL,
+  `updatedate` DATETIME DEFAULT '0000-00-00 00:00:00',
+  `updateby` VARCHAR(128) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `nasname` (`nasname`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `mikrotik_nas`
+--
+
+LOCK TABLES `mikrotik_nas` WRITE;
+/*!40000 ALTER TABLE `mikrotik_nas` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mikrotik_nas` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_services`
+--
+
+DROP TABLE IF EXISTS `user_services`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8mb4;
+CREATE TABLE `user_services` (
+  `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(128) NOT NULL,
+  `service_type` ENUM('pppoe', 'hotspot') NOT NULL,
+  `nas_id` INT(11) DEFAULT NULL,
+  `plan_name` VARCHAR(128) DEFAULT NULL,
+  `expiration_date` DATE DEFAULT NULL,
+  `ip_address` VARCHAR(32) DEFAULT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT '1',
+  `creationdate` DATETIME DEFAULT '0000-00-00 00:00:00',
+  `creationby` VARCHAR(128) DEFAULT NULL,
+  `updatedate` DATETIME DEFAULT '0000-00-00 00:00:00',
+  `updateby` VARCHAR(128) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `username` (`username`),
+  KEY `nas_id` (`nas_id`),
+  KEY `plan_name` (`plan_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `user_services`
+--
+
+LOCK TABLES `user_services` WRITE;
+/*!40000 ALTER TABLE `user_services` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_services` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `wa_gateway_settings`
+--
+
+DROP TABLE IF EXISTS `wa_gateway_settings`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8mb4;
+CREATE TABLE `wa_gateway_settings` (
+  `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `is_enabled` TINYINT(1) NOT NULL DEFAULT '0',
+  `base_url` VARCHAR(255) DEFAULT NULL,
+  `api_key` VARCHAR(255) DEFAULT NULL,
+  `session_name` VARCHAR(128) DEFAULT NULL,
+  `due_days` INT(11) NOT NULL DEFAULT '30',
+  `reminder_days_before` INT(11) NOT NULL DEFAULT '3',
+  `message_template` TEXT DEFAULT NULL,
+  `creationdate` DATETIME DEFAULT '0000-00-00 00:00:00',
+  `creationby` VARCHAR(128) DEFAULT NULL,
+  `updatedate` DATETIME DEFAULT '0000-00-00 00:00:00',
+  `updateby` VARCHAR(128) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `wa_gateway_settings`
+--
+
+LOCK TABLES `wa_gateway_settings` WRITE;
+/*!40000 ALTER TABLE `wa_gateway_settings` DISABLE KEYS */;
+INSERT INTO `wa_gateway_settings`
+    (`id`, `is_enabled`, `base_url`, `api_key`, `session_name`, `due_days`, `reminder_days_before`, `message_template`,
+     `creationdate`, `creationby`, `updatedate`, `updateby`)
+VALUES
+    (1, 0, '', '', '', 30, 3, 'Tagihan Anda akan jatuh tempo pada [InvoiceDue]. Total: [InvoiceTotalAmount]. Silakan melakukan pembayaran.',
+     NOW(), 'system', NOW(), 'system');
+/*!40000 ALTER TABLE `wa_gateway_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `wa_gateway_logs`
+--
+
+DROP TABLE IF EXISTS `wa_gateway_logs`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8mb4;
+CREATE TABLE `wa_gateway_logs` (
+  `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `invoice_id` INT(11) NOT NULL,
+  `phone` VARCHAR(32) DEFAULT NULL,
+  `message_type` VARCHAR(32) NOT NULL DEFAULT 'due_reminder',
+  `sent_at` DATETIME DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`),
+  KEY `invoice_id` (`invoice_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `wa_gateway_logs`
+--
+
+LOCK TABLES `wa_gateway_logs` WRITE;
+/*!40000 ALTER TABLE `wa_gateway_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `wa_gateway_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 -- Adding new custom daloRADIUS groups

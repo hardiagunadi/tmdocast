@@ -26,7 +26,11 @@ DALORADIUS_OPERATORS_PORT=8000
 DALORADIUS_ROOT_DIRECTORY=/var/www/daloradius
 DALORADIUS_CONF_FILE="${DALORADIUS_ROOT_DIRECTORY}/app/common/includes/daloradius.conf.php"
 DALORADIUS_SERVER_ADMIN=admin@daloradius.local
-FREERADIUS_SQL_MOD_PATH="/etc/freeradius/3.0/mods-available/sql"
+FREERADIUS_DIR="/etc/freeradius"
+if [ -d "/etc/freeradius/3.0/mods-available" ]; then
+    FREERADIUS_DIR="/etc/freeradius/3.0"
+fi
+FREERADIUS_SQL_MOD_PATH="${FREERADIUS_DIR}/mods-available/sql"
 
 # Function to print an OK message in green
 print_green() {
@@ -209,7 +213,7 @@ freeradius_setup_sql_mod() {
        ! sed -Ei "s/^[\t\s#]*radius_db\s+=\s+\"radius\"/\tradius_db = \"${DB_SCHEMA}\"/g" "${FREERADIUS_SQL_MOD_PATH}" >/dev/null 2>&1 || \
        ! sed -Ei 's/^[\t\s#]*read_clients\s+=\s+.*$/\tread_clients = yes/g' "${FREERADIUS_SQL_MOD_PATH}" >/dev/null 2>&1 || \
        ! sed -Ei 's/^[\t\s#]*client_table\s+=\s+.*$/\tclient_table = "nas"/g' "${FREERADIUS_SQL_MOD_PATH}" >/dev/null 2>&1 || \
-       ! ln -s "${FREERADIUS_SQL_MOD_PATH}" /etc/freeradius/3.0/mods-enabled/ >/dev/null 2>&1; then
+       ! ln -s "${FREERADIUS_SQL_MOD_PATH}" "${FREERADIUS_DIR}/mods-enabled/" >/dev/null 2>&1; then
         print_red "KO"
         echo "[!] Failed to set up freeRADIUS SQL module. Aborting." >&2
         exit 1
@@ -516,6 +520,23 @@ daloradius_load_sql_schema() {
     print_green "OK"
 }
 
+# Function to apply daloRADIUS updates for existing installations
+daloradius_apply_sql_updates() {
+    DB_DIR="${DALORADIUS_ROOT_DIRECTORY}/contrib/db"
+    echo -n "[+] Applying daloRADIUS SQL updates... "
+
+    if [ -f "${DB_DIR}/mariadb-daloradius-updates.sql" ]; then
+        mariadb --defaults-extra-file="${MARIADB_CLIENT_FILENAME}" < "${DB_DIR}/mariadb-daloradius-updates.sql" >/dev/null 2>&1 & print_spinner $!
+        if [ $? -ne 0 ]; then
+            print_red "KO"
+            print_red "[!] Failed to apply daloRADIUS SQL updates. Aborting." >&2
+            exit 1
+        fi
+    fi
+
+    print_green "OK"
+}
+
 system_finalize() {
     INIT_USERNAME="administrator"
     INIT_PASSWORD=$(generate_random_string 12)
@@ -554,6 +575,7 @@ main() {
     daloradius_installation
     daloradius_setup_required_dirs
     daloradius_setup_required_files
+    daloradius_apply_sql_updates
 
     daloradius_load_sql_schema
 

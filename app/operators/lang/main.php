@@ -65,6 +65,12 @@ if($langConf != $langDefault) {
     }
 }
 
+// Load optional overrides for manual translation fixes
+$overrideFile = __DIR__ . '/overrides/' . pathinfo($langFile, PATHINFO_FILENAME) . '.php';
+if (is_file($overrideFile)) {
+    require_once($overrideFile);
+}
+
 // $langCode can be used in html tag elements like lang and/or xml:lang
 $langCode = str_replace("_", "-", pathinfo($langFile, PATHINFO_FILENAME));
 

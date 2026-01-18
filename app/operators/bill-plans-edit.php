@@ -31,6 +31,7 @@
     include_once("../common/includes/validation.php");
     include("../common/includes/layout.php");
     include("include/management/functions.php");
+    include("../common/includes/mikrotik.php");
     
     // init logging variables
     $log = "visited page: ";
@@ -150,6 +151,22 @@
                 $logDebugSQL .= "$sql;\n";
                 
                 $groupsCount = insert_multiple_plan_group_mappings($dbSocket, $planName, $groups);
+
+                $nas_list = mikrotik_list_nas($dbSocket, $configValues);
+                $rate_limit = mikrotik_rate_limit($planBandwidthDown, $planBandwidthUp);
+                foreach ($nas_list as $nas) {
+                    if (intval($nas['is_active']) !== 1) {
+                        continue;
+                    }
+                    $api = mikrotik_connect($nas);
+                    if ($api) {
+                        mikrotik_sync_profile($api, 'pppoe', $planName, $rate_limit, $nas['isolir_profile'], $nas['redirect_url']);
+                        mikrotik_sync_profile($api, 'hotspot', $planName, $rate_limit, $nas['isolir_profile'], $nas['redirect_url']);
+                        mikrotik_sync_profile($api, 'pppoe', $nas['isolir_profile'], '', $nas['isolir_profile'], $nas['redirect_url']);
+                        mikrotik_sync_profile($api, 'hotspot', $nas['isolir_profile'], '', $nas['isolir_profile'], $nas['redirect_url']);
+                        $api->disconnect();
+                    }
+                }
                     
                 $format = "The %s named %s has been successfully updated. There are %d %s associated to it";
                 $successMsg = sprintf($format, t('all','PlanName'), $planName_enc, $groupsCount, t('title','Profiles'));
