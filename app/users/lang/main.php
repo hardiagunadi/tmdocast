@@ -45,6 +45,12 @@ $langFile = __DIR__ . '/' . $selectedLanguage . '.php';
 
 require_once($langFile);
 
+// Load optional overrides for manual translation fixes
+$overrideFile = __DIR__ . '/overrides/' . $selectedLanguage . '.php';
+if (is_file($overrideFile)) {
+    require_once($overrideFile);
+}
+
 // $langCode can be used in html tag elements like lang and/or xml:lang
 $langCode = str_replace("_", "-", $selectedLanguage);
 

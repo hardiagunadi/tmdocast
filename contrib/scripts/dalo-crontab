@@ -18,3 +18,9 @@ CONTRIB_SCRIPTS="/var/www/daloradius/contrib/scripts"
 
 # This job maintenance/terminate-stale-sessions.php runs every */1 minutes.
 */1 * * * * /usr/bin/php "$CONTRIB_SCRIPTS/maintenance/fix-stale-sessions.php" >/dev/null 2>&1
+
+# Sync expired users to isolir profile every 10 minutes.
+*/10 * * * * /usr/bin/php "$CONTRIB_SCRIPTS/maintenance/sync-expired-users.php" >/dev/null 2>&1
+
+# Send WA reminders daily at 08:00.
+0 8 * * * /usr/bin/php "$CONTRIB_SCRIPTS/maintenance/send-wa-reminders.php" >/dev/null 2>&1

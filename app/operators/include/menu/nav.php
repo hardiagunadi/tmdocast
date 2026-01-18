@@ -28,22 +28,33 @@ if (strpos($_SERVER['PHP_SELF'], '/include/menu/nav.php') !== false) {
 }
 
 $nav = array(
-                "home"   => array( 'Home', 'index.php', ),
-                "mng"    => array( 'Managment', 'mng-main.php', ),
-                "rep"    => array( 'Reports', 'rep-main.php', ),
-                "acct"   => array( 'Accounting', 'acct-main.php', ),
-                "bill"   => array( 'Billing', 'bill-main.php', ),
-                "gis"    => array( 'Gis', 'gis-main.php', ),
-                "graphs" => array( 'Graphs', 'graphs-main.php', ),
-                "config" => array( 'Config', 'config-main.php', ),
-                "help"   => array( 'Help', 'help-main.php', ),    
+                "pppoe"    => array( 'PPPoE Users', 'pppoe-list.php', ),
+                "hotspot"  => array( 'Hotspot Users', 'hotspot-list.php', ),
+                "plans"    => array( 'Plans/Profiles', 'bill-plans-list.php', ),
+                "payments" => array( 'Payments/Invoices', 'bill-invoice-list.php', ),
+                "nas"      => array( 'NAS', 'config-mikrotik.php', ),
+                "settings" => array( 'Settings', 'config-main.php', ),
             );
 
 // detect category from the PHP_SELF name
 $basename = basename($_SERVER['PHP_SELF']);
 $detect_category = substr($basename, 0, strpos($basename, '-'));
+if (strpos($basename, 'pppoe-') === 0) {
+    $detect_category = 'pppoe';
+} else if (strpos($basename, 'hotspot-') === 0) {
+    $detect_category = 'hotspot';
+} else if (strpos($basename, 'bill-plans') === 0) {
+    $detect_category = 'plans';
+} else if (strpos($basename, 'bill-invoice') === 0 || strpos($basename, 'bill-payments') === 0 || strpos($basename, 'bill-pos') === 0) {
+    $detect_category = 'payments';
+} else if (strpos($basename, 'config-mikrotik') === 0 || strpos($basename, 'mng-rad-nas') === 0) {
+    $detect_category = 'nas';
+} else if (strpos($basename, 'config-') === 0) {
+    $detect_category = 'settings';
+}
+
 if (!in_array($detect_category, array_keys($nav))) {
-    $detect_category = "home";
+    $detect_category = 'pppoe';
 }
 
 ?>

@@ -38,6 +38,8 @@
     $crontab_bin = str_replace("\n", "", shell_exec("which crontab || command -v crontab"));
     $storeConfig = true;
     $noticeMsg = '<small class="mt-5"><strong>Please note</strong>: <a href="config-mail-settings.php">SMTP server configuration</a> is required beforehand.</small>';
+    $configValues['CONFIG_WA_REMINDER_ENABLED'] = $configValues['CONFIG_WA_REMINDER_ENABLED'] ?? 'no';
+    $configValues['CONFIG_EXPIRED_ISOLIR_ENABLED'] = $configValues['CONFIG_EXPIRED_ISOLIR_ENABLED'] ?? 'no';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (array_key_exists('csrf_token', $_POST) && isset($_POST['csrf_token']) && dalo_check_csrf_token($_POST['csrf_token'])) {
@@ -68,11 +70,19 @@
                     filter_var(trim($_POST['CONFIG_USER_TRAFFIC_MONITOR_EMAIL_TO'] ?? ''), FILTER_VALIDATE_EMAIL)
                         ? trim($_POST['CONFIG_USER_TRAFFIC_MONITOR_EMAIL_TO']) : '';
             }
+            $configValues['CONFIG_WA_REMINDER_ENABLED'] =
+                in_array(strtolower(trim($_POST['CONFIG_WA_REMINDER_ENABLED'] ?? 'no')), ["yes", "no"])
+                    ? strtolower(trim($_POST['CONFIG_WA_REMINDER_ENABLED'])) : "no";
+            $configValues['CONFIG_EXPIRED_ISOLIR_ENABLED'] =
+                in_array(strtolower(trim($_POST['CONFIG_EXPIRED_ISOLIR_ENABLED'] ?? 'no')), ["yes", "no"])
+                    ? strtolower(trim($_POST['CONFIG_EXPIRED_ISOLIR_ENABLED'])) : "no";
 
             // Generate crontab contents if at least one recurring job is enabled
             $enabled = [$configValues['CONFIG_FIX_STALE_ENABLED'],
                         $configValues['CONFIG_NODE_STATUS_MONITOR_ENABLED'],
-                        $configValues['CONFIG_USER_TRAFFIC_MONITOR_ENABLED']];
+                        $configValues['CONFIG_USER_TRAFFIC_MONITOR_ENABLED'],
+                        $configValues['CONFIG_WA_REMINDER_ENABLED'],
+                        $configValues['CONFIG_EXPIRED_ISOLIR_ENABLED']];
             if (in_array("yes", $enabled)) {
                 $contents = <<<EOF
 # daloRADIUS - RADIUS Web Platform
@@ -98,7 +108,9 @@ EOF;
                 $jobs = [
                     'CONFIG_FIX_STALE_ENABLED' => ['file' => 'maintenance/fix-stale-sessions.php', 'interval' => '*/1'],
                     'CONFIG_NODE_STATUS_MONITOR_ENABLED' => ['file' => 'monitor/node-status-monitor.php', 'interval' => '*/5'],
-                    'CONFIG_USER_TRAFFIC_MONITOR_ENABLED' => ['file' => 'monitor/user-traffic-monitor.php', 'interval' => '*/20']
+                    'CONFIG_USER_TRAFFIC_MONITOR_ENABLED' => ['file' => 'monitor/user-traffic-monitor.php', 'interval' => '*/20'],
+                    'CONFIG_EXPIRED_ISOLIR_ENABLED' => ['file' => 'maintenance/sync-expired-users.php', 'interval' => '*/10'],
+                    'CONFIG_WA_REMINDER_ENABLED' => ['file' => 'maintenance/send-wa-reminders.php', 'interval' => '0 8']
                 ];
 
                 foreach ($jobs as $key => $job) {
@@ -181,6 +193,7 @@ EOF;
                       array( 'stale-session', "Stale sessions" ),
                       array( 'node-monitor', "Node Monitor" ),
                       array( 'user-monitor', "User Monitor" ),
+                      array( 'billing-maint', "Billing & Isolir" ),
                       array( 'crontab-output', "Crontab output" ),
                     );
 
@@ -339,8 +352,34 @@ EOF;
 
     close_tab();
 
+    // tab 3
     open_tab($navkeys, 3);
-    printf('<h2 class="fs-5">%s</h2>', $navkeys[3][1]);
+    $fieldset3_descriptor = array( "title" => $navkeys[3][1] );
+    open_fieldset($fieldset3_descriptor);
+
+    $input_descriptors3 = [];
+    $input_descriptors3[] = array(
+                                    "type" => "select",
+                                    "options" => ["yes", "no"],
+                                    "caption" => "Enable WA reminder",
+                                    "name" => 'CONFIG_WA_REMINDER_ENABLED',
+                                    "selected_value" => $configValues['CONFIG_WA_REMINDER_ENABLED'] ?? "no",
+                                 );
+    $input_descriptors3[] = array(
+                                    "type" => "select",
+                                    "options" => ["yes", "no"],
+                                    "caption" => "Enable sync isolir (expired users)",
+                                    "name" => 'CONFIG_EXPIRED_ISOLIR_ENABLED',
+                                    "selected_value" => $configValues['CONFIG_EXPIRED_ISOLIR_ENABLED'] ?? "no",
+                                 );
+    foreach ($input_descriptors3 as $input_descriptor) {
+        print_form_component($input_descriptor);
+    }
+    close_fieldset();
+    close_tab();
+
+    open_tab($navkeys, 4);
+    printf('<h2 class="fs-5">%s</h2>', $navkeys[4][1]);
     echo '<pre class="p-2">';
     $exec = sprintf("%s -l 2>&1", $crontab_bin);
     exec($exec, $output, $return_status);
@@ -349,24 +388,74 @@ EOF;
         printf("%s\n", htmlspecialchars($text, ENT_QUOTES, 'UTF-8'));
     }
     echo '</pre>';
+    $cron_status_dir = rtrim($configValues['CONFIG_PATH_DALO_VARIABLE_DATA'], DIRECTORY_SEPARATOR)
+                     . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . 'cron-status';
+    $cron_status_files = array(
+        'maintenance/fix-stale-sessions.php' => 'fix-stale-sessions',
+        'monitor/node-status-monitor.php' => 'node-status-monitor',
+        'monitor/user-traffic-monitor.php' => 'user-traffic-monitor',
+        'maintenance/sync-expired-users.php' => 'sync-expired-users',
+        'maintenance/send-wa-reminders.php' => 'send-wa-reminders',
+    );
+
+    echo '<h3 class="fs-6 mt-4">Cron Status</h3>';
+    echo '<div class="table-responsive"><table class="table table-sm table-striped table-bordered">';
+    echo '<thead><tr><th>Job</th><th>Enabled</th><th>Status</th><th>Last Run</th><th>Message</th></tr></thead><tbody>';
+    $crontab_text = implode("\n", $output);
+    $status_classes = array(
+        'ok' => 'success',
+        'fail' => 'danger',
+        'skipped' => 'secondary',
+        'not_run' => 'warning',
+        'unknown' => 'secondary',
+    );
+    foreach ($cron_status_files as $job => $status_name) {
+        $enabled = (strpos($crontab_text, $job) !== false) ? 'yes' : 'no';
+        $status = 'unknown';
+        $last_run = '-';
+        $message = '';
+        $status_path = $cron_status_dir . DIRECTORY_SEPARATOR . $status_name . '.json';
+        if (file_exists($status_path)) {
+            $data = json_decode(file_get_contents($status_path), true);
+            if (is_array($data)) {
+                $status = $data['status'] ?? 'unknown';
+                $message = $data['message'] ?? '';
+                $last_run = $data['updated_at'] ?? '-';
+            }
+        } else {
+            $status = 'not_run';
+        }
+
+        $badge_class = $status_classes[$status] ?? 'secondary';
+        $status_html = sprintf('<span class="badge bg-%s">%s</span>',
+                               htmlspecialchars($badge_class, ENT_QUOTES, 'UTF-8'),
+                               htmlspecialchars($status, ENT_QUOTES, 'UTF-8'));
+        printf('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+               htmlspecialchars($job, ENT_QUOTES, 'UTF-8'),
+               htmlspecialchars($enabled, ENT_QUOTES, 'UTF-8'),
+               $status_html,
+               htmlspecialchars($last_run, ENT_QUOTES, 'UTF-8'),
+               htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
+    }
+    echo '</tbody></table></div>';
     close_tab();
 
     close_tab_wrapper();
 
     // end
-    $input_descriptors3 = array();
-    $input_descriptors3[] = array(
+    $input_descriptors4 = array();
+    $input_descriptors4[] = array(
                                     "name" => "csrf_token",
                                     "type" => "hidden",
                                     "value" => dalo_csrf_token(),
                                  );
-    $input_descriptors3[] = array(
+    $input_descriptors4[] = array(
                                     'type' => 'submit',
                                     'name' => 'submit',
                                     'value' => t('buttons','apply')
                                  );
 
-    foreach ($input_descriptors3 as $input_descriptor) {
+    foreach ($input_descriptors4 as $input_descriptor) {
         print_form_component($input_descriptor);
     }
 

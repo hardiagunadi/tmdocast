@@ -133,8 +133,7 @@ $valid_db_engines = array(
 
 // values taken from an instance of freeradius 3.0.21
 $valid_nastypes = array(
-                         "other", "cisco", "computone", "livingston", "juniper", "max40xx", "multitech",
-                         "netserver", "pathras", "patton", "portslave", "tc", "usrhiper"
+                         "mikrotik", "cisco"
                        );
 
 // accounting custom-query options list
@@ -272,61 +271,11 @@ $valid_paymentStatus = array(
 $valid_vendorTypes = array( "Any", "2Checkout", "PayPal" );
 $valid_billactions = array( "Any", "Refill Session Time", "Refill Session Traffic" );
 
-$valid_planTypes = array( "Prepaid", "Postpaid", "2Checkout", "PayPal", );
+$valid_planTypes = array( "Prepaid", "Postpaid", );
 $valid_planRecurringPeriods = array( "Never", "Daily", "Weekly", "Monthly", "Quarterly", "Semi-Yearly", "Yearly", );
 $valid_planRecurringBillingSchedules = array( "Fixed", "Anniversary", );
 $valid_planCurrencys = [
-                        "USD", // United States Dollar
-                        "EUR", // Euro
-                        "JPY", // Japanese Yen
-                        "GBP", // British Pound Sterling
-                        "CAD", // Canadian Dollar
-                        "AUD", // Australian Dollar
-                        "CHF", // Swiss Franc
-                        "CNY", // Chinese Yuan
-                        "HKD", // Hong Kong Dollar
-                        "NZD", // New Zealand Dollar
-                        "SEK", // Swedish Krona
-                        "KRW", // South Korean Won
-                        "SGD", // Singapore Dollar
-                        "NOK", // Norwegian Krone
-                        "MXN", // Mexican Peso
-                        "INR", // Indian Rupee
-                        "RUB", // Russian Ruble
-                        "ZAR", // South African Rand
-                        "TRY", // Turkish Lira
-                        "BRL", // Brazilian Real
-                        "TWD", // New Taiwan Dollar
-                        "DKK", // Danish Krone
-                        "PLN", // Polish Zloty
-                        "THB", // Thai Baht
                         "IDR", // Indonesian Rupiah
-                        "HUF", // Hungarian Forint
-                        "CZK", // Czech Koruna
-                        "ILS", // Israeli New Shekel
-                        "PHP", // Philippine Peso
-                        "ARS", // Argentine Peso
-                        "CLP", // Chilean Peso
-                        "COP", // Colombian Peso
-                        "MYR", // Malaysian Ringgit
-                        "KES", // Kenyan Shilling
-                        "UAH", // Ukrainian Hryvnia
-                        "NGN", // Nigerian Naira
-                        "EGP", // Egyptian Pound
-                        "PKR", // Pakistani Rupee
-                        "VND", // Vietnamese Dong
-                        "BDT", // Bangladeshi Taka
-                        "IQD", // Iraqi Dinar
-                        "IRR", // Iranian Rial
-                        "QAR", // Qatari Riyal
-                        "KWD", // Kuwaiti Dinar
-                        "OMR", // Omani Rial
-                        "BHD", // Bahraini Dinar
-                        "LYD", // Libyan Dinar
-                        "AED", // United Arab Emirates Dirham
-                        "SAR", // Saudi Riyal
-                        "JOD", // Jordanian Dinar
-                        "LBP", // Lebanese Pound
                       ];
 
 $valid_planTimeTypes = array( "Accumulative", "Time-To-Finish" );
@@ -335,24 +284,26 @@ $valid_timeUnits = array( "second", "minute", "hour", "day", "week", "month", );
 
 // ordered by country code
 $operators_valid_languages = array(
-                                    "ar" => "Arabic",
+                                    //"ar" => "Arabic",
                                     "en" => "English",
-                                    "es_ve" => "Spanish - Venezuelan",
-                                    "hu" => "Hungarian",
-                                    "it" => "Italian",
-                                    "ja" => "Japanese",
-                                    "pt_br" => "Portuguese - Brazilian",
-                                    "ro" => "Romanian",
-                                    "ru" => "Russian",
-                                    "tr" => "Turkish",
-                                    "zh" => "Chinese",
+                                    //"es_ve" => "Spanish - Venezuelan",
+                                    //"hu" => "Hungarian",
+                                    "id" => "Bahasa Indonesia (Indonesian)",
+                                    //"it" => "Italian",
+                                    //"ja" => "Japanese",
+                                    //"pt_br" => "Portuguese - Brazilian",
+                                    //"ro" => "Romanian",
+                                    //"ru" => "Russian",
+                                    //"tr" => "Turkish",
+                                    //"zh" => "Chinese",
                                   );
 // users allowed languages
 $users_valid_languages = array(
                                     "en" => "English",
-                                    "it" => "Italiano (Italian)",
-                                    "ro" => "Română (Romanian)",
-                                    "ru" => "Русский (Russian)",
+                                    //"it" => "Italiano (Italian)",
+                                    "id" => "Bahasa Indonesia (Indonesian)",
+                                    //"ro" => "Română (Romanian)",
+                                    //"ru" => "Русский (Russian)",
                                   );
 
 $valid_message_types = array(

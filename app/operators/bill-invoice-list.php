@@ -161,6 +161,9 @@
         $logDebugSQL .= "$sql;\n";
         
         $per_page_numrows = $res->numRows();
+        $paid_status_id = intval($dbSocket->getOne(
+            sprintf("SELECT id FROM %s WHERE value='paid' LIMIT 1", $configValues['CONFIG_DB_TBL_DALOBILLINGINVOICESTATUS'])
+        ));
         
         // this can be passed as form attribute and 
         // printTableFormControls function parameter
@@ -211,6 +214,9 @@
                                 'actions' => array(),
                              );
             $tooltip1['actions'][] = array( 'href' => sprintf('bill-invoice-edit.php?invoice_id=%d', $id, ), 'label' => t('Tooltip','InvoiceEdit'), );
+            if ($status_id != $paid_status_id) {
+                $tooltip1['actions'][] = array( 'href' => sprintf('bill-invoice-pay.php?invoice_id=%d', $id, ), 'label' => 'Bayar', );
+            }
             
             // define tooltip1
             $tooltip2 = array(

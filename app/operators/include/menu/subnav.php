@@ -26,74 +26,38 @@ if (strpos($_SERVER['PHP_SELF'], '/include/menu/subnav.php') !== false) {
     exit;
 }
 
-// load subnav category. valid categories are:
-// "acct", "bill", "gis", "help", "mng", "rep", "config", "graphs", "home"
-
+// load subnav category
 $subnav = array();
-
-// home subnav elements
-$subnav["home"] = array();
-
-// graphs subnav elements
-$subnav["graphs"] = array();
-
-// config subnav elements
-$subnav["config"] = array(
-                            'General' => 'config-main.php',
-                            'Reporting' => 'config-reports.php',
-                            'Maintenance' => 'config-maint.php',
-                            'Operators' => 'config-operators.php',
-                            'Backup' => 'config-backup.php',
-                            'Mail' => 'config-mail-settings.php',
+// PPPoE
+$subnav["pppoe"] = array(
+                            'Daftar' => 'pppoe-list.php',
+                            'Tambah' => 'pppoe-new.php',
                         );
-
-// rep subnav elements
-$subnav["rep"] = array(
-                            'General' => 'rep-main.php',
-                            'Logs' => 'rep-logs.php',
-                            'Status' => 'rep-stat.php',
-                            'Batch Users' => 'rep-batch.php',
-                            'Dashboard' => 'rep-hb.php',
+// Hotspot
+$subnav["hotspot"] = array(
+                            'Daftar' => 'hotspot-list.php',
+                            'Tambah' => 'hotspot-new.php',
                         );
-
-// mng subnav elements
-$subnav["mng"] = array(
-                            'Users' => 'mng-users.php',
-                            'Batch Users' => 'mng-batch.php',
-                            'Hotspots' => 'mng-hs.php',
-                            'Nas' => 'mng-rad-nas.php',
-                            'User-Groups' => 'mng-rad-usergroup.php',
-                            'Profiles' => 'mng-rad-profiles.php',
-                            'HuntGroups' => 'mng-rad-hunt.php',
-                            'Attributes' => 'mng-rad-attributes.php',
-                            'Realm/Proxy' => 'mng-rad-realms.php',
-                            'IP-Pool' => 'mng-rad-ippool.php',
+// Plans/Profiles
+$subnav["plans"] = array(
+                            'Daftar Paket' => 'bill-plans-list.php',
+                            'Paket Baru' => 'bill-plans-new.php',
                         );
-
-// help subnav elements
-$subnav["help"] = array();
-
-// gis subnav elements
-$subnav["gis"] = array();
-
-// bill subnav elements
-$subnav["bill"] = array(
-                            'POS' => 'bill-pos.php',
-                            'Plans' => 'bill-plans.php',
-                            'Rates' => 'bill-rates.php',
-                            'Merchant-Transactions' => 'bill-merchant.php',
-                            'Billing-History' => 'bill-history.php',
-                            'Invoices' => 'bill-invoice.php',
-                            'Payments' => 'bill-payments.php',
+// Payments/Invoices
+$subnav["payments"] = array(
+                            'Invoices' => 'bill-invoice-list.php',
+                            'Payments' => 'bill-payments-list.php',
+                            'Pelanggan' => 'bill-pos-list.php',
                         );
-
-// acct subnav elements
-$subnav["acct"] = array(
-                            'General' => 'acct-main.php',
-                            'Plans' => 'acct-plans.php',
-                            'Custom' => 'acct-custom.php',
-                            'Hotspot' => 'acct-hotspot.php',
-                            'Maintenance' => 'acct-maintenance.php',
+// NAS
+$subnav["nas"] = array(
+                            'MikroTik' => 'config-mikrotik.php',
+                            'NAS RADIUS' => 'mng-rad-nas.php',
+                        );
+// Settings
+$subnav["settings"] = array(
+                            'WA Gateway' => 'config-wa-gateway.php',
+                            'Bahasa' => 'config-lang.php',
                         );
 
 
@@ -102,8 +66,22 @@ $subnav["acct"] = array(
 // detect category from the PHP_SELF name
 $basename = basename($_SERVER['PHP_SELF']);
 $detect_category = substr($basename, 0, strpos($basename, '-'));
+if (strpos($basename, 'pppoe-') === 0) {
+    $detect_category = 'pppoe';
+} else if (strpos($basename, 'hotspot-') === 0) {
+    $detect_category = 'hotspot';
+} else if (strpos($basename, 'bill-plans') === 0) {
+    $detect_category = 'plans';
+} else if (strpos($basename, 'bill-invoice') === 0 || strpos($basename, 'bill-payments') === 0 || strpos($basename, 'bill-pos') === 0) {
+    $detect_category = 'payments';
+} else if (strpos($basename, 'config-mikrotik') === 0 || strpos($basename, 'mng-rad-nas') === 0) {
+    $detect_category = 'nas';
+} else if (strpos($basename, 'config-') === 0) {
+    $detect_category = 'settings';
+}
+
 if (!in_array($detect_category, array_keys($subnav))) {
-    $detect_category = "home";
+    $detect_category = 'pppoe';
 }
 
 if (!empty($detect_category) && count($subnav[$detect_category]) > 0) {

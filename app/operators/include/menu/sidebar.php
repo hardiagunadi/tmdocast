@@ -30,56 +30,39 @@ $autocomplete = (isset($configValues['CONFIG_IFACE_AUTO_COMPLETE']) &&
                  strtolower($configValues['CONFIG_IFACE_AUTO_COMPLETE']) === "yes");
 
 $cat_subcat_tree = array(
-                            "home" => array(),
-                            "mng" => array( "batch", "hs", "rad-nas", "rad-usergroup", "rad-groups",
-                                            "rad-profiles", "rad-hunt", "rad-attributes", "rad-realms", "rad-ippool", ),
-                            "rep" => array( "logs", "stat", "batch", "hb", ),
-                            "acct" => array( "plans", "custom", "hotspot", "maintenance", ),
-                            "bill" => array( "plans", "rates", "merchant", "history", "invoice", "payments", ),
-                            "gis" => array(),
-                            "graphs" => array(),
-                            "config" => array( "reports", "maint", "operators", "backup", "mail", ),
-                            "help" => array(),
+                            "pppoe" => array(),
+                            "hotspot" => array(),
+                            "plans" => array(),
+                            "payments" => array(),
+                            "nas" => array(),
+                            "settings" => array(),
                         );
 
 $allowed_categories = array_keys($cat_subcat_tree);
 
 $basename = basename($_SERVER['PHP_SELF'], ".php");
 $tmp = explode("-", $basename);
-
-
-if (count($tmp) > 1 && !in_array($tmp[0], $allowed_categories)) {
-    exit;
-}
-
 $detected_category = $tmp[0];
 
-if ($detected_category == "mng") {
-    if ($tmp[1] == "rad" && count($tmp) > 2) {
-        if ($tmp[2] == "proxys") {
-            $detected_subcategory = "rad-realms";
-        } else if ($tmp[2] == "groupcheck" || $tmp[2] == "groupreply") {
-            $detected_subcategory = "rad-groups";
-        } else {
-            $detected_subcategory = "rad-" . $tmp[2];
-        }
-            
-    } else {
-        $detected_subcategory = $tmp[1];
-    }
-} else if ($detected_category == "bill") {
-    if ($tmp[1] == "payment" && count($tmp) > 2) {
-        $detected_subcategory = "payments";
-    } else {
-        $detected_subcategory = $tmp[1];
-    }
-} else {
-    $detected_subcategory = $tmp[1];
+if (strpos($basename, 'pppoe-') === 0) {
+    $detected_category = 'pppoe';
+} else if (strpos($basename, 'hotspot-') === 0) {
+    $detected_category = 'hotspot';
+} else if (strpos($basename, 'bill-plans') === 0) {
+    $detected_category = 'plans';
+} else if (strpos($basename, 'bill-invoice') === 0 || strpos($basename, 'bill-payments') === 0 || strpos($basename, 'bill-pos') === 0) {
+    $detected_category = 'payments';
+} else if (strpos($basename, 'config-mikrotik') === 0 || strpos($basename, 'mng-rad-nas') === 0) {
+    $detected_category = 'nas';
+} else if (strpos($basename, 'config-') === 0) {
+    $detected_category = 'settings';
 }
 
-if (!in_array($detected_subcategory, $cat_subcat_tree[$detected_category])) {
-    $detected_subcategory = "default";
+if (!in_array($detected_category, $allowed_categories)) {
+    $detected_category = 'pppoe';
 }
+
+$detected_subcategory = "default";
 
 $sidebar_file = sprintf("include/menu/sidebar/%s/%s.php", $detected_category, $detected_subcategory);
 if (file_exists($sidebar_file)) {
