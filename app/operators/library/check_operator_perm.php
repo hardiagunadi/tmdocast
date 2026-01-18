@@ -42,6 +42,16 @@ $sql = sprintf("SELECT access FROM %s WHERE operator_id=%d AND file='%s'",
                $configValues['CONFIG_DB_TBL_DALOOPERATORS_ACL'], $_SESSION['operator_id'], $file);
 $access = intval($dbSocket->getOne($sql)) === 1;
 
+if (!$access && intval($_SESSION['operator_id']) === 1) {
+    $fallback_files = array(
+        'config_l2tp',
+        'config_db_update',
+    );
+    if (in_array($file, $fallback_files, true)) {
+        $access = true;
+    }
+}
+
 include('../common/includes/db_close.php');
 
 // we finally check if the access to the requested page could be granted
