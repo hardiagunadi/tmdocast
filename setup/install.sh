@@ -26,6 +26,9 @@ DALORADIUS_OPERATORS_PORT=8000
 DALORADIUS_ROOT_DIRECTORY=/var/www/daloradius
 DALORADIUS_CONF_FILE="${DALORADIUS_ROOT_DIRECTORY}/app/common/includes/daloradius.conf.php"
 DALORADIUS_SERVER_ADMIN=admin@daloradius.local
+DALORADIUS_OPERATORS_DOMAIN=""
+DALORADIUS_USERS_DOMAIN=""
+LETSENCRYPT_EMAIL=""
 FREERADIUS_DIR="/etc/freeradius"
 if [ -d "/etc/freeradius/3.0/mods-available" ]; then
     FREERADIUS_DIR="/etc/freeradius/3.0"
@@ -116,6 +119,31 @@ system_ensure_root() {
       exit 1
     fi
   fi
+}
+
+# Function to prompt for domains and email for SSL
+prompt_domains() {
+    echo "[?] Configure domains for operators and users (HTTPS via Let's Encrypt)"
+    while true; do
+        read -r -p "Operators domain (e.g. operator.example.com): " DALORADIUS_OPERATORS_DOMAIN
+        read -r -p "Users domain (e.g. user.example.com): " DALORADIUS_USERS_DOMAIN
+        read -r -p "Let's Encrypt email: " LETSENCRYPT_EMAIL
+
+        if [ -z "${DALORADIUS_OPERATORS_DOMAIN}" ] || [ -z "${DALORADIUS_USERS_DOMAIN}" ] || [ -z "${LETSENCRYPT_EMAIL}" ]; then
+            print_red "[!] Domain and email are required."
+            continue
+        fi
+
+        echo
+        echo "Operators domain: ${DALORADIUS_OPERATORS_DOMAIN}"
+        echo "Users domain:     ${DALORADIUS_USERS_DOMAIN}"
+        echo "Email:            ${LETSENCRYPT_EMAIL}"
+        echo
+        read -r -p "Use these values? [y/N]: " confirm
+        if [[ "${confirm}" =~ ^[Yy]$ ]]; then
+            break
+        fi
+    done
 }
 
 # Function to install necessary system packages and perform system update
@@ -398,11 +426,19 @@ EOF
 # Function to set up Apache ports for daloRADIUS
 apache_setup_ports() {
     echo -n "[+] Setting up Apache ports for daloRADIUS... "
-    cat <<EOF > /etc/apache2/ports.conf
+    if [ -n "${DALORADIUS_OPERATORS_DOMAIN}" ] && [ -n "${DALORADIUS_USERS_DOMAIN}" ]; then
+        cat <<EOF > /etc/apache2/ports.conf
+# daloRADIUS
+Listen 80
+Listen 443
+EOF
+    else
+        cat <<EOF > /etc/apache2/ports.conf
 # daloRADIUS
 Listen \${DALORADIUS_USERS_PORT}
 Listen \${DALORADIUS_OPERATORS_PORT}
 EOF
+    fi
     if [ $? -ne 0 ]; then
         print_red "KO"
         print_red "[!] Failed to set up Apache ports for daloRADIUS. Aborting." >&2
@@ -415,7 +451,29 @@ EOF
 apache_setup_operators_site() {
     echo -n "[+] Setting up Apache site for operators... "
     
-    cat <<EOF > /etc/apache2/sites-available/operators.conf
+    if [ -n "${DALORADIUS_OPERATORS_DOMAIN}" ]; then
+        cat <<EOF > /etc/apache2/sites-available/operators.conf
+<VirtualHost *:80>
+  ServerName ${DALORADIUS_OPERATORS_DOMAIN}
+  ServerAdmin \${DALORADIUS_SERVER_ADMIN}
+  DocumentRoot \${DALORADIUS_ROOT_DIRECTORY}/app/operators
+
+  <Directory \${DALORADIUS_ROOT_DIRECTORY}/app/operators>
+    Options -Indexes +FollowSymLinks
+    AllowOverride All
+    Require all granted
+  </Directory>
+
+  <Directory \${DALORADIUS_ROOT_DIRECTORY}>
+    Require all denied
+  </Directory>
+
+  ErrorLog \${APACHE_LOG_DIR}/daloradius/operators/error.log
+  CustomLog \${APACHE_LOG_DIR}/daloradius/operators/access.log combined
+</VirtualHost>
+EOF
+    else
+        cat <<EOF > /etc/apache2/sites-available/operators.conf
 <VirtualHost *:\${DALORADIUS_OPERATORS_PORT}>
   ServerAdmin \${DALORADIUS_SERVER_ADMIN}
   DocumentRoot \${DALORADIUS_ROOT_DIRECTORY}/app/operators
@@ -434,6 +492,7 @@ apache_setup_operators_site() {
   CustomLog \${APACHE_LOG_DIR}/daloradius/operators/access.log combined
 </VirtualHost>
 EOF
+    fi
     if [ $? -ne 0 ]; then
         print_red "KO"
         print_red "[!] Failed to init operators site. Aborting." >&2
@@ -453,7 +512,29 @@ EOF
 apache_setup_users_site() {
     echo -n "[+] Setting up Apache site for users... "
 
-    cat <<EOF > /etc/apache2/sites-available/users.conf
+    if [ -n "${DALORADIUS_USERS_DOMAIN}" ]; then
+        cat <<EOF > /etc/apache2/sites-available/users.conf
+<VirtualHost *:80>
+  ServerName ${DALORADIUS_USERS_DOMAIN}
+  ServerAdmin \${DALORADIUS_SERVER_ADMIN}
+  DocumentRoot \${DALORADIUS_ROOT_DIRECTORY}/app/users
+
+  <Directory \${DALORADIUS_ROOT_DIRECTORY}/app/users>
+    Options -Indexes +FollowSymLinks
+    AllowOverride None
+    Require all granted
+  </Directory>
+
+  <Directory \${DALORADIUS_ROOT_DIRECTORY}>
+    Require all denied
+  </Directory>
+
+  ErrorLog \${APACHE_LOG_DIR}/daloradius/users/error.log
+  CustomLog \${APACHE_LOG_DIR}/daloradius/users/access.log combined
+</VirtualHost>
+EOF
+    else
+        cat <<EOF > /etc/apache2/sites-available/users.conf
 <VirtualHost *:\${DALORADIUS_USERS_PORT}>
   ServerAdmin \${DALORADIUS_SERVER_ADMIN}
   DocumentRoot \${DALORADIUS_ROOT_DIRECTORY}/app/users
@@ -472,6 +553,7 @@ apache_setup_users_site() {
   CustomLog \${APACHE_LOG_DIR}/daloradius/users/access.log combined
 </VirtualHost>
 EOF
+    fi
     if [ $? -ne 0 ]; then
         print_red "KO"
         print_red "[!] Failed to init users site. Aborting." >&2
@@ -493,6 +575,40 @@ apache_enable_restart() {
     if ! systemctl enable apache2.service  >/dev/null 2>&1 || ! systemctl restart apache2.service >/dev/null 2>&1; then
         print_red "KO"
         echo "[!] Failed to enable and restart Apache. Aborting." >&2
+        exit 1
+    fi
+    print_green "OK"
+}
+
+# Function to install certbot and request SSL certificates
+apache_enable_ssl() {
+    if [ -z "${DALORADIUS_OPERATORS_DOMAIN}" ] || [ -z "${DALORADIUS_USERS_DOMAIN}" ]; then
+        return
+    fi
+
+    echo -n "[+] Installing Certbot and enabling SSL... "
+    if ! apt --no-install-recommends install certbot python3-certbot-apache -y >/dev/null 2>&1 & print_spinner $!; then
+        print_red "KO"
+        print_red "[!] Failed to install Certbot. Aborting." >&2
+        exit 1
+    fi
+
+    if ! a2enmod ssl rewrite >/dev/null 2>&1; then
+        print_red "KO"
+        print_red "[!] Failed to enable Apache SSL modules. Aborting." >&2
+        exit 1
+    fi
+
+    if ! systemctl restart apache2.service >/dev/null 2>&1; then
+        print_red "KO"
+        print_red "[!] Failed to restart Apache before Certbot. Aborting." >&2
+        exit 1
+    fi
+
+    if ! certbot --apache --non-interactive --agree-tos --redirect \
+        -m "${LETSENCRYPT_EMAIL}" -d "${DALORADIUS_OPERATORS_DOMAIN}" -d "${DALORADIUS_USERS_DOMAIN}" >/dev/null 2>&1; then
+        print_red "KO"
+        print_red "[!] Failed to obtain SSL certificate. Aborting." >&2
         exit 1
     fi
     print_green "OK"
@@ -554,8 +670,13 @@ system_finalize() {
     echo -e "      - DB password: ${BLUE}${DB_PASS}${NC}"
     echo -e "      - DB schema: ${BLUE}${DB_SCHEMA}${NC}"
 
-    echo -e "    Users' dashboard can be reached via ${BLUE}HTTP${NC} on port ${BLUE}${DALORADIUS_USERS_PORT}${NC}."
-    echo -e "    Operators' dashboard can be reached via ${BLUE}HTTP${NC} on port ${BLUE}${DALORADIUS_OPERATORS_PORT}${NC}."
+    if [ -n "${DALORADIUS_OPERATORS_DOMAIN}" ] && [ -n "${DALORADIUS_USERS_DOMAIN}" ]; then
+        echo -e "    Users' dashboard: ${BLUE}https://${DALORADIUS_USERS_DOMAIN}${NC}"
+        echo -e "    Operators' dashboard: ${BLUE}https://${DALORADIUS_OPERATORS_DOMAIN}${NC}"
+    else
+        echo -e "    Users' dashboard can be reached via ${BLUE}HTTP${NC} on port ${BLUE}${DALORADIUS_USERS_PORT}${NC}."
+        echo -e "    Operators' dashboard can be reached via ${BLUE}HTTP${NC} on port ${BLUE}${DALORADIUS_OPERATORS_PORT}${NC}."
+    fi
     echo -e "    To log into the ${BLUE}operators' dashboard${NC}, use the following credentials:"
     echo -e "      - Username: ${BLUE}${INIT_USERNAME}${NC}"
     echo -e "      - Password: ${BLUE}${INIT_PASSWORD}${NC}"
@@ -565,6 +686,7 @@ system_finalize() {
 main() {
     system_ensure_root
     system_update
+    prompt_domains
 
     mariadb_install
     mariadb_secure
@@ -575,9 +697,8 @@ main() {
     daloradius_installation
     daloradius_setup_required_dirs
     daloradius_setup_required_files
-    daloradius_apply_sql_updates
-
     daloradius_load_sql_schema
+    daloradius_apply_sql_updates
 
     freeradius_install
     freeradius_setup_sql_mod
@@ -589,6 +710,7 @@ main() {
     apache_setup_operators_site
     apache_setup_users_site
     apache_enable_restart
+    apache_enable_ssl
 
     system_finalize
     mariadb_clean_conf
