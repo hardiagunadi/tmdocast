@@ -11,7 +11,7 @@ if (strpos($_SERVER['PHP_SELF'], '/common/includes/wa_gateway.php') !== false) {
 }
 
 function wa_gateway_get_settings($dbSocket, $configValues) {
-    $sql = sprintf("SELECT id, is_enabled, base_url, api_key, session_name, due_days, reminder_days_before, message_template
+    $sql = sprintf("SELECT id, is_enabled, base_url, api_key, session_name, masterkey, due_days, reminder_days_before, message_template
                     FROM %s WHERE id=1", $configValues['CONFIG_DB_TBL_DALOWAGATEWAY']);
     $row = $dbSocket->getRow($sql, array(), DB_FETCHMODE_ASSOC);
     return (DB::isError($row) || empty($row)) ? array() : $row;
@@ -39,6 +39,9 @@ function wa_gateway_send_text($settings, $to, $text) {
     $headers = array('Content-Type: application/json');
     if (!empty($settings['api_key'])) {
         $headers[] = 'key: ' . $settings['api_key'];
+    }
+    if (!empty($settings['masterkey'])) {
+        $headers[] = 'masterkey: ' . $settings['masterkey'];
     }
 
     $context = stream_context_create(array(

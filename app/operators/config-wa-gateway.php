@@ -25,6 +25,7 @@
             $base_url = (array_key_exists('base_url', $_POST)) ? trim($_POST['base_url']) : "";
             $api_key = (array_key_exists('api_key', $_POST)) ? trim($_POST['api_key']) : "";
             $session_name = (array_key_exists('session_name', $_POST)) ? trim($_POST['session_name']) : "";
+            $masterkey = (array_key_exists('masterkey', $_POST)) ? trim($_POST['masterkey']) : "";
             $due_days = (array_key_exists('due_days', $_POST) && intval($_POST['due_days']) > 0) ? intval($_POST['due_days']) : 30;
             $reminder_days_before = (array_key_exists('reminder_days_before', $_POST) && intval($_POST['reminder_days_before']) >= 0)
                                   ? intval($_POST['reminder_days_before']) : 3;
@@ -32,12 +33,13 @@
 
             include('../common/includes/db_open.php');
             $current_datetime = date('Y-m-d H:i:s');
-            $sql = sprintf("UPDATE %s SET is_enabled=%d, base_url='%s', api_key='%s', session_name='%s',
+            $sql = sprintf("UPDATE %s SET is_enabled=%d, base_url='%s', api_key='%s', session_name='%s', masterkey='%s',
                             due_days=%d, reminder_days_before=%d, message_template='%s',
                             updatedate='%s', updateby='%s' WHERE id=1",
                             $configValues['CONFIG_DB_TBL_DALOWAGATEWAY'], $is_enabled,
                             $dbSocket->escapeSimple($base_url), $dbSocket->escapeSimple($api_key),
-                            $dbSocket->escapeSimple($session_name), $due_days, $reminder_days_before,
+                            $dbSocket->escapeSimple($session_name), $dbSocket->escapeSimple($masterkey),
+                            $due_days, $reminder_days_before,
                             $dbSocket->escapeSimple($message_template), $current_datetime, $dbSocket->escapeSimple($operator));
             $res = $dbSocket->query($sql);
             $logDebugSQL .= "$sql;\n";
@@ -57,7 +59,7 @@
     }
 
     include('../common/includes/db_open.php');
-    $sql = sprintf("SELECT id, is_enabled, base_url, api_key, session_name, due_days, reminder_days_before, message_template
+    $sql = sprintf("SELECT id, is_enabled, base_url, api_key, session_name, masterkey, due_days, reminder_days_before, message_template
                     FROM %s WHERE id=1", $configValues['CONFIG_DB_TBL_DALOWAGATEWAY']);
     $row = $dbSocket->getRow($sql, array(), DB_FETCHMODE_ASSOC);
     include('../common/includes/db_close.php');
@@ -67,6 +69,7 @@
         'base_url' => '',
         'api_key' => '',
         'session_name' => '',
+        'masterkey' => '',
         'due_days' => 30,
         'reminder_days_before' => 3,
         'message_template' => 'Tagihan Anda akan jatuh tempo pada [InvoiceDue]. Total: [InvoiceTotalAmount]. Silakan melakukan pembayaran.',
@@ -106,6 +109,12 @@
         "caption" => "Session Name",
         "type" => "text",
         "value" => $settings['session_name'],
+    );
+    $input_descriptors0[] = array(
+        "name" => "masterkey",
+        "caption" => "Masterkey",
+        "type" => "text",
+        "value" => $settings['masterkey'],
     );
     $input_descriptors0[] = array(
         "name" => "due_days",

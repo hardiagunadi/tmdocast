@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS `wa_gateway_settings` (
   `base_url` VARCHAR(255) DEFAULT NULL,
   `api_key` VARCHAR(255) DEFAULT NULL,
   `session_name` VARCHAR(128) DEFAULT NULL,
+  `masterkey` VARCHAR(255) DEFAULT NULL,
   `due_days` INT(11) NOT NULL DEFAULT '30',
   `reminder_days_before` INT(11) NOT NULL DEFAULT '3',
   `message_template` TEXT DEFAULT NULL,
@@ -102,6 +103,13 @@ SELECT COUNT(*) INTO @c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=@db A
 SET @s = IF(@c=0, "ALTER TABLE mikrotik_nas ADD COLUMN pppoe_pool_cidr INT(11) NOT NULL DEFAULT 20", "SELECT 1");
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+-- Ensure masterkey exists for wa_gateway_settings
+SET @tbl = 'wa_gateway_settings';
+SET @col = 'masterkey';
+SELECT COUNT(*) INTO @c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=@db AND TABLE_NAME=@tbl AND COLUMN_NAME=@col;
+SET @s = IF(@c=0, "ALTER TABLE wa_gateway_settings ADD COLUMN masterkey VARCHAR(255) DEFAULT NULL", "SELECT 1");
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 -- Ensure new columns exist for user_services
 SET @tbl = 'user_services';
 SET @col = 'ip_address';
@@ -111,10 +119,10 @@ PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- Default WA gateway settings row
 INSERT IGNORE INTO wa_gateway_settings
-    (`id`, `is_enabled`, `base_url`, `api_key`, `session_name`, `due_days`, `reminder_days_before`, `message_template`,
+    (`id`, `is_enabled`, `base_url`, `api_key`, `session_name`, `masterkey`, `due_days`, `reminder_days_before`, `message_template`,
      `creationdate`, `creationby`, `updatedate`, `updateby`)
 VALUES
-    (1, 0, '', '', '', 30, 3, 'Tagihan Anda akan jatuh tempo pada [InvoiceDue]. Total: [InvoiceTotalAmount]. Silakan melakukan pembayaran.',
+    (1, 0, '', '', '', '', 30, 3, 'Tagihan Anda akan jatuh tempo pada [InvoiceDue]. Total: [InvoiceTotalAmount]. Silakan melakukan pembayaran.',
      NOW(), 'system', NOW(), 'system');
 
 -- ACL updates
@@ -125,6 +133,7 @@ INSERT IGNORE INTO operators_acl (`operator_id`, `file`, `access`) VALUES
     (1, 'hotspot_list', 1),
     (1, 'config_mikrotik', 1),
     (1, 'config_wa_gateway', 1),
+    (1, 'config_db_update', 1),
     (1, 'bill_invoice_pay', 1);
 
 INSERT IGNORE INTO operators_acl_files (`file`, `category`, `section`) VALUES
@@ -134,5 +143,5 @@ INSERT IGNORE INTO operators_acl_files (`file`, `category`, `section`) VALUES
     ('hotspot_list', 'Management', 'Users'),
     ('config_mikrotik', 'Configuration', 'NAS'),
     ('config_wa_gateway', 'Configuration', 'Integrations'),
+    ('config_db_update', 'Configuration', 'Maintenance'),
     ('bill_invoice_pay', 'Billing', 'Invoice');
-

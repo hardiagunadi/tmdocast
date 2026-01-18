@@ -359,4 +359,5 @@ $l['submenu']['Pelanggan'] = "Pelanggan";
 $l['submenu']['MikroTik'] = "MikroTik";
 $l['submenu']['NAS RADIUS'] = "NAS RADIUS";
 $l['submenu']['WA Gateway'] = "WA Gateway";
+$l['submenu']['Update Database'] = "Update Database";
 $l['submenu']['Bahasa'] = "Bahasa";

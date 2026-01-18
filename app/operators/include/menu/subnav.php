@@ -57,6 +57,8 @@ $subnav["nas"] = array(
 // Settings
 $subnav["settings"] = array(
                             'WA Gateway' => 'config-wa-gateway.php',
+                            'VPN L2TP' => 'config-l2tp.php',
+                            'Update Database' => 'config-db-update.php',
                             'Bahasa' => 'config-lang.php',
                         );
 

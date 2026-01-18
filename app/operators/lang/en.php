@@ -1907,3 +1907,4 @@ $l['submenu']['Payments'] = "Payments";
 $l['submenu']['Custom'] = "Custom";
 $l['submenu']['Hotspot'] = "Hotspot";
 $l['submenu']['Mail'] = "Mail";
+$l['submenu']['Update Database'] = "Update Database";

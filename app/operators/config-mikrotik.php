@@ -66,10 +66,10 @@
         $radiusSecretEsc = str_replace('"', '\"', $radiusSecret);
         $script = array(
             '/radius remove [find comment="added by TMDRadius"]',
-            '/user remove [find comment="user for mixradius authentication"]',
-            '/user group remove [find comment="group for mixradius authentication"]',
-            '/user group add name="mixradius.group" policy=read,write,api,test,policy,sensitive comment="group for mixradius authentication"',
-            sprintf('/user add name="%s" group="mixradius.group" password="%s" comment="user for mixradius authentication"', $apiUserEsc, $apiPassEsc),
+            '/user remove [find comment="user for TMDRadius authentication"]',
+            '/user group remove [find comment="group for TMDRadius authentication"]',
+            '/user group add name="TMDRadius.group" policy=read,write,api,test,policy,sensitive comment="group for TMDRadius authentication"',
+            sprintf('/user add name="%s" group="TMDRadius.group" password="%s" comment="user for TMDRadius authentication"', $apiUserEsc, $apiPassEsc),
             sprintf('/radius add authentication-port=%d accounting-port=%d timeout=2s comment="added by TMDRadius" service=ppp,hotspot,login address=%s secret="%s"', $authPort, $acctPort, $radiusServer, $radiusSecretEsc),
             '/ip hotspot profile set use-radius=yes radius-accounting=yes radius-interim-update="00:10:00" nas-port-type="wireless-802.11" [find name!=""]',
             '/ppp aaa set use-radius=yes accounting=yes interim-update="00:10:00"',
@@ -88,9 +88,9 @@
         $radiusSecret = trim($radiusSecret) !== '' ? $radiusSecret : $nasRow['api_password'];
 
         $commentRadius = 'added by TMDRadius';
-        $commentUser = 'user for mixradius authentication';
-        $commentGroup = 'group for mixradius authentication';
-        $groupName = 'mixradius.group';
+        $commentUser = 'user for TMDRadius authentication';
+        $commentGroup = 'group for TMDRadius authentication';
+        $groupName = 'TMDRadius.group';
 
         $userItems = $api->command('/user/print', array('?comment' => $commentUser));
         foreach ($userItems as $item) {

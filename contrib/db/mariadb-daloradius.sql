@@ -10464,6 +10464,7 @@ INSERT INTO `operators_acl` (`id`, `operator_id`, `file`, `access`) VALUES
 (159, 1, 'config_mikrotik', 1),
 (160, 1, 'config_wa_gateway', 1),
 (161, 1, 'bill_invoice_pay', 1),
+(162, 1, 'config_db_update', 1),
 (140, 1, 'ator_username', 0),
 (141, 1, 'ator_password', 0),
 (142, 1, 'tname', 0),
@@ -10647,6 +10648,7 @@ INSERT INTO `operators_acl_files` (`file`, `category`, `section`) VALUES
 ('config_reports_dashboard', 'Configuration', 'Reporting'),
 ('config_mikrotik', 'Configuration', 'NAS'),
 ('config_wa_gateway', 'Configuration', 'Integrations'),
+('config_db_update', 'Configuration', 'Maintenance'),
 ('rep_stat_ups', 'Reporting', 'Status'),
 ('rep_stat_raid', 'Reporting', 'Status'),
 ('rep_stat_cron', 'Reporting', 'Status');
@@ -10976,6 +10978,7 @@ CREATE TABLE `wa_gateway_settings` (
   `base_url` VARCHAR(255) DEFAULT NULL,
   `api_key` VARCHAR(255) DEFAULT NULL,
   `session_name` VARCHAR(128) DEFAULT NULL,
+  `masterkey` VARCHAR(255) DEFAULT NULL,
   `due_days` INT(11) NOT NULL DEFAULT '30',
   `reminder_days_before` INT(11) NOT NULL DEFAULT '3',
   `message_template` TEXT DEFAULT NULL,
@@ -10994,10 +10997,10 @@ SET character_set_client = @saved_cs_client;
 LOCK TABLES `wa_gateway_settings` WRITE;
 /*!40000 ALTER TABLE `wa_gateway_settings` DISABLE KEYS */;
 INSERT INTO `wa_gateway_settings`
-    (`id`, `is_enabled`, `base_url`, `api_key`, `session_name`, `due_days`, `reminder_days_before`, `message_template`,
+    (`id`, `is_enabled`, `base_url`, `api_key`, `session_name`, `masterkey`, `due_days`, `reminder_days_before`, `message_template`,
      `creationdate`, `creationby`, `updatedate`, `updateby`)
 VALUES
-    (1, 0, '', '', '', 30, 3, 'Tagihan Anda akan jatuh tempo pada [InvoiceDue]. Total: [InvoiceTotalAmount]. Silakan melakukan pembayaran.',
+    (1, 0, '', '', '', '', 30, 3, 'Tagihan Anda akan jatuh tempo pada [InvoiceDue]. Total: [InvoiceTotalAmount]. Silakan melakukan pembayaran.',
      NOW(), 'system', NOW(), 'system');
 /*!40000 ALTER TABLE `wa_gateway_settings` ENABLE KEYS */;
 UNLOCK TABLES;
