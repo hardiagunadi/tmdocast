@@ -63,8 +63,8 @@
     $installer_path = "";
     $packages_script = "";
     $packages_path = "";
-    $apply_output = array();
-    $apply_exit = null;
+    $apply_log_path = '';
+    $apply_pid = '';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (array_key_exists('csrf_token', $_POST) && isset($_POST['csrf_token']) && dalo_check_csrf_token($_POST['csrf_token'])) {
@@ -304,14 +304,21 @@
                     file_put_contents($packages_path, $packages_script);
 
                     if (function_exists('exec')) {
-                        $command = "bash " . escapeshellarg($installer_path) . " 2>&1";
-                        $apply_output = array();
-                        $apply_exit = null;
-                        exec($command, $apply_output, $apply_exit);
-                        if ($apply_exit === 0) {
-                            $successMsg .= " Konfigurasi server berhasil diterapkan.";
+                        $log_dir = dirname(__DIR__, 2) . '/var/log';
+                        if (!is_dir($log_dir)) {
+                            mkdir($log_dir, 0750, true);
+                        }
+                        $apply_log_path = $log_dir . '/l2tp-config.log';
+                        $command = "nohup bash " . escapeshellarg($installer_path)
+                                 . " > " . escapeshellarg($apply_log_path) . " 2>&1 & echo $!";
+                        $output = array();
+                        $exit_code = null;
+                        exec($command, $output, $exit_code);
+                        if ($exit_code === 0 && !empty($output[0])) {
+                            $apply_pid = trim($output[0]);
+                            $successMsg .= " Konfigurasi server dijalankan di background (PID: {$apply_pid}).";
                         } else {
-                            $failureMsg = "Gagal menerapkan konfigurasi server. Jalankan manual sebagai root.";
+                            $failureMsg = "Gagal menjalankan konfigurasi di background. Jalankan manual sebagai root.";
                             $logAction .= "Failed applying L2TP config on page: ";
                         }
                     }
@@ -436,13 +443,6 @@
     close_fieldset();
     close_form();
 
-    echo '<div class="mt-4">';
-    echo '<h5>Konfigurasi L2TP Server (Linux)</h5>';
-    echo '<textarea id="l2tpServerScript" class="form-control" rows="18" readonly>'
-        . htmlspecialchars($server_script, ENT_QUOTES, 'UTF-8') . '</textarea>';
-    echo '<button type="button" class="btn btn-outline-primary mt-2 js-copy" data-target="l2tpServerScript">Salin Konfigurasi Server</button>';
-    echo '</div>';
-
     if (!empty($installer_script)) {
         echo '<div class="mt-4">';
         echo '<h5>Installer Paket L2TP (Linux)</h5>';
@@ -469,12 +469,15 @@
         echo '</div>';
     }
 
-    if (!empty($apply_output)) {
+    if (!empty($apply_log_path)) {
         echo '<div class="mt-4">';
         echo '<h5>Log Apply Konfigurasi</h5>';
-        echo '<pre class="small bg-light p-3 border">';
-        echo htmlspecialchars(implode("\n", $apply_output), ENT_QUOTES, 'UTF-8');
-        echo '</pre>';
+        echo '<div class="alert alert-info mb-0">';
+        echo 'Log tersimpan di: <code>' . htmlspecialchars($apply_log_path, ENT_QUOTES, 'UTF-8') . '</code>';
+        if (!empty($apply_pid)) {
+            echo '<br>PID: <code>' . htmlspecialchars($apply_pid, ENT_QUOTES, 'UTF-8') . '</code>';
+        }
+        echo '</div>';
         echo '</div>';
     }
 

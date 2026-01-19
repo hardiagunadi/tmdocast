@@ -1,0 +1,42 @@
+[0;1;32m●[0m strongswan-starter.service - strongSwan IPsec IKEv1/IKEv2 daemon using ipsec.conf
+     Loaded: loaded (]8;;file://M7xOS/usr/lib/systemd/system/strongswan-starter.service/usr/lib/systemd/system/strongswan-starter.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Mon 2026-01-19 22:53:51 WIB; 13min ago
+   Main PID: 39286 (starter)
+      Tasks: 18 (limit: 9420)
+     Memory: 2.9M (peak: 3.8M)
+        CPU: 34ms
+     CGroup: /system.slice/strongswan-starter.service
+             ├─[0;38;5;245m39286 /usr/lib/ipsec/starter --daemon charon --nofork[0m
+             └─[0;38;5;245m39295 /usr/lib/ipsec/charon[0m
+
+Jan 19 22:53:51 M7xOS charon[39295]: 00[CFG] loading aa certificates from '/etc/ipsec.d/aacerts'
+Jan 19 22:53:51 M7xOS charon[39295]: 00[CFG] loading ocsp signer certificates from '/etc/ipsec.d/ocspcerts'
+Jan 19 22:53:51 M7xOS charon[39295]: 00[CFG] loading attribute certificates from '/etc/ipsec.d/acerts'
+Jan 19 22:53:51 M7xOS charon[39295]: 00[CFG] loading crls from '/etc/ipsec.d/crls'
+Jan 19 22:53:51 M7xOS charon[39295]: 00[CFG] loading secrets from '/etc/ipsec.secrets'
+Jan 19 22:53:51 M7xOS charon[39295]: 00[LIB] loaded plugins: charon aesni aes rc2 sha2 sha1 md5 mgf1 random nonce x509 revocation constraints pubkey pkcs1 pkcs7 pkcs12 pgp dnskey sshkey pem openssl pkcs8 fips-prf gmp agent xcbc hmac kdf gcm drbg attr kernel-netlink resolve socket-default connmark stroke updown eap-mschapv2 xauth-generic counters
+Jan 19 22:53:51 M7xOS charon[39295]: 00[LIB] dropped capabilities, running as uid 0, gid 0
+Jan 19 22:53:51 M7xOS charon[39295]: 00[JOB] spawning 16 worker threads
+Jan 19 22:53:51 M7xOS ipsec[39286]: charon (39295) started after 40 ms
+Jan 19 22:53:51 M7xOS ipsec_starter[39286]: charon (39295) started after 40 ms
+
+[0;1;32m●[0m xl2tpd.service - LSB: layer 2 tunelling protocol daemon
+     Loaded: loaded (]8;;file://M7xOS/etc/init.d/xl2tpd/etc/init.d/xl2tpd]8;;; generated[0;1;32m[0m)
+     Active: [0;1;32mactive (running)[0m since Mon 2026-01-19 22:53:50 WIB; 13min ago
+       Docs: ]8;;man:systemd-sysv-generator(8)man:systemd-sysv-generator(8)]8;;
+      Tasks: 1 (limit: 9420)
+     Memory: 236.0K (peak: 1.9M)
+        CPU: 22ms
+     CGroup: /system.slice/xl2tpd.service
+             └─[0;38;5;245m39250 /usr/sbin/xl2tpd[0m
+
+Jan 19 22:53:50 M7xOS xl2tpd[39249]: Not looking for kernel SAref support.
+Jan 19 22:53:50 M7xOS xl2tpd[39249]: L2TP kernel support not detected (try modprobing l2tp_ppp and pppol2tp)
+Jan 19 22:53:50 M7xOS xl2tpd[39250]: xl2tpd version xl2tpd-1.3.18 started on M7xOS PID:39250
+Jan 19 22:53:50 M7xOS xl2tpd[39245]: Starting xl2tpd: xl2tpd.
+Jan 19 22:53:50 M7xOS xl2tpd[39250]: Written by Mark Spencer, Copyright (C) 1998, Adtran, Inc.
+Jan 19 22:53:50 M7xOS systemd[1]: Started xl2tpd.service - LSB: layer 2 tunelling protocol daemon.
+Jan 19 22:53:50 M7xOS xl2tpd[39250]: Forked by Scott Balmos and David Stipp, (C) 2001
+Jan 19 22:53:50 M7xOS xl2tpd[39250]: Inherited by Jeff McAdams, (C) 2002
+Jan 19 22:53:50 M7xOS xl2tpd[39250]: Forked again by Xelerance (www.xelerance.com) (C) 2006-2016
+Jan 19 22:53:50 M7xOS xl2tpd[39250]: Listening on IP address 0.0.0.0, port 1701
