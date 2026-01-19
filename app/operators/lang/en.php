@@ -177,6 +177,9 @@ $l['all']['HotSpotName'] = "Hotspot Name";
 $l['all']['Name'] = "Name";
 $l['all']['Username'] = "Username";
 $l['all']['Password'] = "Password";
+$l['all']['CurrentPassword'] = "Current Password";
+$l['all']['NewPassword'] = "New Password";
+$l['all']['ConfirmPassword'] = "Confirm Password";
 $l['all']['PasswordType'] = "Password Type";
 $l['all']['IPAddress'] = "IP Address";
 $l['all']['Profile'] = "Profile";
@@ -1172,6 +1175,7 @@ $l['Intro']['configoperatorsdel.php'] = "Remove Operator";
 $l['Intro']['configoperatorsedit.php'] = "Edit Operator Settings";
 $l['Intro']['configoperatorsnew.php'] = "New Operator";
 $l['Intro']['configoperatorslist.php'] = "Operators Listing";
+$l['Intro']['configoperatorpassword.php'] = "Change Operator Password";
 
 $l['Intro']['login.php'] = "Login";
 
@@ -1553,6 +1557,7 @@ $l['helpPage']['configoperatorsdel'] = "To remove an operator from the database 
 $l['helpPage']['configoperatorsedit'] = "Edit the operator user details below";
 $l['helpPage']['configoperatorsnew'] = "You may fill below details for a new operator user addition to database";
 $l['helpPage']['configoperatorslist'] = "Listing all Operators in database";
+$l['helpPage']['configoperatorpassword'] = "Update your operator password using your current password.";
 
 $l['helpPage']['configbackup'] = <<<EOF
 <h1 class="fs-5">Backup</h1>
