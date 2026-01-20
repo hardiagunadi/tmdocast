@@ -203,10 +203,30 @@
                 } elseif (is_readable('/etc/wireguard/wg0.pub')) {
                     $server_public_key = trim(file_get_contents('/etc/wireguard/wg0.pub'));
                 }
-                $server_public_key = ($server_public_key !== '') ? $server_public_key : 'PASTE_SERVER_PUBLIC_KEY';
+                if ($server_public_key === '') {
+                    $ensure_script = dirname(__DIR__, 2) . '/setup/ensure-wireguard-server-pub.sh';
+                    if (is_file($ensure_script) && is_executable($ensure_script) && function_exists('exec')) {
+                        $ensure_cmd = "sudo bash " . escapeshellarg($ensure_script) . " >/dev/null 2>&1";
+                        $ensure_out = array();
+                        $ensure_code = null;
+                        exec($ensure_cmd, $ensure_out, $ensure_code);
+                        if ($ensure_code === 0 && is_readable($server_key_path)) {
+                            $server_public_key = trim(file_get_contents($server_key_path));
+                        }
+                    }
+                }
+                if ($server_public_key === '') {
+                    $failureMsg = "Public key VPS belum tersedia. Jalankan apply server dulu lalu Generate ulang.";
+                    $logAction .= "Failed generating WireGuard scripts (missing server public key) on page: ";
+                }
+                if (!empty($failureMsg)) {
+                    $server_public_key = '';
+                }
                 $server_peer_ip = ($server_wg_ip !== '') ? ($server_wg_ip . '/32') : $values['wg_server_address'];
                 $client_iface = mikrotik_escape($values['client_name']);
-                $client_lines = array(
+                $client_lines = array();
+                if ($server_public_key !== '') {
+                    $client_lines = array(
                     ":if ([:len [/interface wireguard find name=\"" . $client_iface . "\"]] = 0) do={",
                     "  :put \"Interface " . $client_iface . " belum ada, buat dulu di MikroTik.\"",
                     "}",
@@ -226,15 +246,15 @@
                         . " secret=\"" . mikrotik_escape($values['radius_secret']) . "\" authentication-port="
                         . $values['radius_auth_port'] . " accounting-port=" . $values['radius_acct_port'] . " timeout=2s",
                     "}",
-                );
-                if ($server_public_key === 'PASTE_SERVER_PUBLIC_KEY') {
-                    array_unshift($client_lines, "# Replace PASTE_SERVER_PUBLIC_KEY with VPS public key after apply.");
+                    );
                 }
 
                 $server_script = implode("\n", $server_lines);
                 $client_script = implode("\n", $client_lines);
-                $successMsg = "Script VPN WireGuard berhasil dibuat.";
-                $logAction .= "Generated WireGuard scripts on page: ";
+                if (empty($failureMsg) && $server_public_key !== '') {
+                    $successMsg = "Script VPN WireGuard berhasil dibuat.";
+                    $logAction .= "Generated WireGuard scripts on page: ";
+                }
 
                 $installer_lines = array(
                     "#!/usr/bin/env bash",
