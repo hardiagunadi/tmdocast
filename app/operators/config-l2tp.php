@@ -400,28 +400,10 @@
     close_fieldset();
     close_form();
 
-    if (!empty($installer_script)) {
+    if (!empty($apply_log_path) && !empty($apply_pid)) {
         echo '<div class="mt-4">';
-        echo '<h5>Installer Konfigurasi WireGuard (VPS)</h5>';
-        echo '<textarea id="wgInstallerScript" class="form-control" rows="18" readonly>'
-            . htmlspecialchars($installer_script, ENT_QUOTES, 'UTF-8') . '</textarea>';
-        echo '<button type="button" class="btn btn-outline-primary mt-2 js-copy" data-target="wgInstallerScript">Salin Installer Konfigurasi</button>';
-        if (!empty($installer_path)) {
-            echo '<div class="alert alert-info mt-2 mb-0">';
-            echo 'Jalankan manual jika auto-apply gagal: <code>bash ' . htmlspecialchars($installer_path, ENT_QUOTES, 'UTF-8') . '</code>';
-            echo '</div>';
-        }
-        echo '</div>';
-    }
-
-    if (!empty($apply_log_path)) {
-        echo '<div class="mt-4">';
-        echo '<h5>Log Apply Konfigurasi</h5>';
         echo '<div class="alert alert-info mb-0">';
-        echo 'Log tersimpan di: <code>' . htmlspecialchars($apply_log_path, ENT_QUOTES, 'UTF-8') . '</code>';
-        if (!empty($apply_pid)) {
-            echo '<br>PID: <code>' . htmlspecialchars($apply_pid, ENT_QUOTES, 'UTF-8') . '</code>';
-        }
+        echo 'Konfigurasi VPS dijalankan di background. PID: <code>' . htmlspecialchars($apply_pid, ENT_QUOTES, 'UTF-8') . '</code>';
         echo '</div>';
         echo '</div>';
     }
