@@ -305,6 +305,14 @@
                     if (!is_dir($log_dir)) {
                         mkdir($log_dir, 0750, true);
                     }
+                    $ensure_script = dirname(__DIR__, 2) . '/setup/ensure-wireguard-server-pub.sh';
+                    if (is_file($ensure_script) && is_executable($ensure_script)) {
+                        $ensure_cmd = "nohup sudo bash " . escapeshellarg($ensure_script)
+                            . " > /dev/null 2>&1 &";
+                        $ensure_out = array();
+                        $ensure_code = null;
+                        exec($ensure_cmd, $ensure_out, $ensure_code);
+                    }
                     $apply_log_path = $log_dir . '/wireguard-config.log';
                     $queued_payload = json_encode(array(
                         'status' => 'queued',
