@@ -4,6 +4,7 @@ set -euo pipefail
 STATUS_FILE="/var/www/daloradius/var/log/wireguard-config.status.json"
 STATUS_RUN_ID="manual_wg_$(date +%s)"
 CLIENT_KEY_FILE="/var/www/daloradius/var/log/wireguard-client.key"
+SERVER_KEY_FILE="/var/www/daloradius/var/log/wireguard-server.pub"
 CLIENT_PUBKEY=""
 write_status() {
   printf "{\"status\":\"%s\",\"time\":%s,\"run_id\":\"%s\"}\\n" "$1" "$(date +%s)" "$STATUS_RUN_ID" > "$STATUS_FILE"
@@ -44,6 +45,8 @@ if [ ! -f /etc/wireguard/wg0.key ]; then
 else
   wg pubkey < /etc/wireguard/wg0.key > /etc/wireguard/wg0.pub
 fi
+mkdir -p "$(dirname "$SERVER_KEY_FILE")"
+cp /etc/wireguard/wg0.pub "$SERVER_KEY_FILE"
 chmod 600 /etc/wireguard/wg0.key
 chmod 644 /etc/wireguard/wg0.pub
 

@@ -67,6 +67,7 @@
     $log_dir = dirname(__DIR__, 2) . '/var/log';
     $status_path = $log_dir . '/wireguard-config.status.json';
     $client_key_path = $log_dir . '/wireguard-client.key';
+    $server_key_path = $log_dir . '/wireguard-server.pub';
     if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $values['radius_secret'] === '') {
         $allowed_chars = $configValues['CONFIG_USER_ALLOWEDRANDOMCHARS'] ?? '';
         $values['radius_secret'] = generate_radius_secret(16, $allowed_chars);
@@ -197,7 +198,9 @@
                 );
 
                 $server_public_key = '';
-                if (is_readable('/etc/wireguard/wg0.pub')) {
+                if (is_readable($server_key_path)) {
+                    $server_public_key = trim(file_get_contents($server_key_path));
+                } elseif (is_readable('/etc/wireguard/wg0.pub')) {
                     $server_public_key = trim(file_get_contents('/etc/wireguard/wg0.pub'));
                 }
                 $server_public_key = ($server_public_key !== '') ? $server_public_key : 'PASTE_SERVER_PUBLIC_KEY';
@@ -259,6 +262,8 @@
                     "else",
                     "  wg pubkey < /etc/wireguard/wg0.key > /etc/wireguard/wg0.pub",
                     "fi",
+                    "mkdir -p " . $log_dir,
+                    "cp /etc/wireguard/wg0.pub " . $server_key_path,
                     "chmod 600 /etc/wireguard/wg0.key",
                     "chmod 644 /etc/wireguard/wg0.pub",
                     "",
