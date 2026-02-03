@@ -1,0 +1,29 @@
+# API Directory Configuration
+# Allow direct access to PHP files
+
+# Enable rewrite engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Deny access to .htaccess
+    <Files .htaccess>
+        Order Allow,Deny
+        Deny from all
+    </Files>
+
+    # Allow access to PHP files
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^(.*)$ - [L]
+
+    # Return 404 for non-existent files
+    RewriteRule ^(.*)$ index.php [L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
